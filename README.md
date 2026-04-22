@@ -37,6 +37,19 @@ The project follows a clean and modular architecture:
 - Android Studio / Xcode (for emulators)
 - CocoaPods (for iOS)
 
+## Environment Setup
+
+This project uses `react-native-config` to manage environment variables. 
+
+1. **Create a `.env` file** in the root directory:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Configure your API Keys**:
+   Open the `.env` file and provide your Google Maps API Key:
+   - `GOOGLE_MAPS_API_KEY`: Required for Google Maps to render on Android.
+
 ## Getting Started
 
 1. **Clone the repository**:
