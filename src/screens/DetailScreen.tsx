@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
+import Config from 'react-native-config';
 import { Vehicle } from '../types';
 
 const DetailScreen = ({ route }: any) => {
@@ -11,7 +12,6 @@ const DetailScreen = ({ route }: any) => {
     <ScrollView style={styles.container}>
       <View style={styles.mapContainer}>
         <MapView
-          provider={PROVIDER_GOOGLE}
           style={styles.map}
           initialRegion={{
             latitude: attributes.latitude,
