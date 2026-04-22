@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import { 
   View, 
   FlatList, 
@@ -19,13 +19,17 @@ const HomeScreen = ({ navigation }: any) => {
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  
+  // Filter states
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  const [selectedTrips, setSelectedTrips] = useState<string[]>([]);
 
-  const loadData = useCallback(async (newOffset: number, isRefresh: boolean = false) => {
+  const loadData = useCallback(async (newOffset: number, isRefresh: boolean = false, routes: string[] = [], trips: string[] = []) => {
     try {
       if (!isRefresh) setLoading(true);
       setError(null);
       
-      const response = await fetchVehicles(newOffset);
+      const response = await fetchVehicles(newOffset, routes, trips);
       
       if (isRefresh) {
         setVehicles(response.data);
@@ -43,20 +47,41 @@ const HomeScreen = ({ navigation }: any) => {
   }, []);
 
   useEffect(() => {
-    loadData(0);
-  }, [loadData]);
+    loadData(0, true, selectedRoutes, selectedTrips);
+  }, [selectedRoutes, selectedTrips]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Filter', {
+            selectedRoutes,
+            selectedTrips,
+            onApply: (routes: string[], trips: string[]) => {
+              setSelectedRoutes(routes);
+              setSelectedTrips(trips);
+              setOffset(0);
+            }
+          })}
+          style={{ marginRight: 15 }}
+        >
+          <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>Filter</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, selectedRoutes, selectedTrips]);
 
   const onRefresh = () => {
     setRefreshing(true);
     setOffset(0);
-    loadData(0, true);
+    loadData(0, true, selectedRoutes, selectedTrips);
   };
 
   const loadMore = () => {
     if (!loading && hasMore) {
       const nextOffset = offset + 10;
       setOffset(nextOffset);
-      loadData(nextOffset);
+      loadData(nextOffset, false, selectedRoutes, selectedTrips);
     }
   };
 
