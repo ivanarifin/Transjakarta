@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,143 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  Animated,
 } from 'react-native';
 import {fetchRoutes, fetchTrips} from '../services/api';
 import {Route, Trip} from '../types';
+
+const FilterChip = ({
+  item,
+  isSelected,
+  onPress,
+}: {
+  item: Route;
+  isSelected: boolean;
+  onPress: () => void;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{transform: [{scale}]}}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[styles.chip, isSelected && styles.chipSelected]}
+        onPress={onPress}>
+        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+          {item.attributes.short_name || item.id}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const AnimatedButton = ({
+  children,
+  onPress,
+  style,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: any;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={[{flex: 1}, style, {transform: [{scale}]}]}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        onPress={onPress}
+        style={StyleSheet.absoluteFill}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          {children}
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const FilterListItem = ({
+  item,
+  isSelected,
+  onPress,
+}: {
+  item: Trip;
+  isSelected: boolean;
+  onPress: () => void;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.98,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={{transform: [{scale}]}}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[styles.listItem, isSelected && styles.listItemSelected]}
+        onPress={onPress}>
+        <Text style={styles.listText}>{item.attributes.headsign || item.id}</Text>
+        {isSelected && <Text style={styles.check}>✓</Text>}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 const FilterScreen = ({navigation, route}: any) => {
   const {
@@ -28,16 +162,44 @@ const FilterScreen = ({navigation, route}: any) => {
   );
   const [loading, setLoading] = useState(true);
 
+  const slideAnim = useRef(new Animated.Value(300)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [loading, slideAnim, fadeAnim]);
+
   useEffect(() => {
     const loadFilters = async () => {
       try {
         const routesRes = await fetchRoutes();
-        setRoutes(routesRes.data);
+        // Ensure unique routes
+        const uniqueRoutes = Array.from(
+          new Map(routesRes.data.map(r => [r.id, r])).values(),
+        );
+        setRoutes(uniqueRoutes);
 
         // Fetch trips for the first few routes to avoid huge requests
-        const routeIds = routesRes.data.slice(0, 10).map(r => r.id);
+        const routeIds = uniqueRoutes.slice(0, 10).map(r => r.id);
         const tripsRes = await fetchTrips(routeIds);
-        setTrips(tripsRes.data);
+        // Ensure unique trips
+        const uniqueTrips = Array.from(
+          new Map(tripsRes.data.map(t => [t.id, t])).values(),
+        );
+        setTrips(uniqueTrips);
       } catch (error) {
         console.error('Failed to load filters', error);
       } finally {
@@ -74,7 +236,15 @@ const FilterScreen = ({navigation, route}: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.section}>
+      <Animated.View
+        style={[
+          {flex: 1},
+          {
+            opacity: fadeAnim,
+            transform: [{translateY: slideAnim}],
+          },
+        ]}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>Pilih Rute (Multiple)</Text>
         <FlatList
           data={routes}
@@ -82,22 +252,13 @@ const FilterScreen = ({navigation, route}: any) => {
           showsHorizontalScrollIndicator={false}
           keyExtractor={item => item.id}
           renderItem={({item}) => (
-            <TouchableOpacity
-              style={[
-                styles.chip,
-                selectedRoutes.includes(item.id) && styles.chipSelected,
-              ]}
+            <FilterChip
+              item={item}
+              isSelected={selectedRoutes.includes(item.id)}
               onPress={() =>
                 toggleSelection(item.id, selectedRoutes, setSelectedRoutes)
-              }>
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedRoutes.includes(item.id) && styles.chipTextSelected,
-                ]}>
-                {item.attributes.short_name || item.id}
-              </Text>
-            </TouchableOpacity>
+              }
+            />
           )}
         />
       </View>
@@ -106,40 +267,36 @@ const FilterScreen = ({navigation, route}: any) => {
         <Text style={styles.sectionTitle}>Pilih Trip (Multiple)</Text>
         <FlatList
           data={trips}
+          showsVerticalScrollIndicator={false}
           keyExtractor={item => item.id}
           renderItem={({item}) => (
-            <TouchableOpacity
-              style={[
-                styles.listItem,
-                selectedTrips.includes(item.id) && styles.listItemSelected,
-              ]}
+            <FilterListItem
+              item={item}
+              isSelected={selectedTrips.includes(item.id)}
               onPress={() =>
                 toggleSelection(item.id, selectedTrips, setSelectedTrips)
-              }>
-              <Text style={styles.listText}>
-                {item.attributes.headsign || item.id}
-              </Text>
-              {selectedTrips.includes(item.id) && (
-                <Text style={styles.check}>✓</Text>
-              )}
-            </TouchableOpacity>
+              }
+            />
           )}
         />
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity
+        <AnimatedButton
           style={styles.resetButton}
           onPress={() => {
             setSelectedRoutes([]);
             setSelectedTrips([]);
           }}>
           <Text style={styles.resetText}>Reset</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+        </AnimatedButton>
+        <AnimatedButton
+          style={[styles.applyButton, {flex: 2}]}
+          onPress={handleApply}>
           <Text style={styles.applyText}>Terapkan Filter</Text>
-        </TouchableOpacity>
+        </AnimatedButton>
       </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };

@@ -11,9 +11,15 @@ const Stack = createNativeStackNavigator();
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen 
-          name="Home" 
+      <Stack.Navigator
+        initialRouteName="Home"
+        screenOptions={{
+          animation: 'slide_from_right',
+          headerStyle: {backgroundColor: '#fff'},
+          headerShadowVisible: false,
+        }}>
+        <Stack.Screen
+          name="Home"
           component={HomeScreen} 
           options={{ title: 'Armada Transjakarta' }}
         />

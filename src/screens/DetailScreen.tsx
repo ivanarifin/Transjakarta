@@ -1,39 +1,78 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import React, {useEffect, useRef} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Animated,
+} from 'react-native';
+import MapView, {Marker} from 'react-native-maps';
 import Config from 'react-native-config';
-import { Vehicle } from '../types';
+import {Vehicle} from '../types';
 
-const DetailScreen = ({ route }: any) => {
-  const { vehicle }: { vehicle: Vehicle } = route.params;
-  const { attributes } = vehicle;
+const DetailScreen = ({route}: any) => {
+  const {vehicle}: {vehicle: Vehicle} = route.params;
+  const {attributes} = vehicle;
+
+  const mapFadeAnim = useRef(new Animated.Value(0)).current;
+  const detailsSlideAnim = useRef(new Animated.Value(100)).current;
+  const detailsFadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.stagger(300, [
+      Animated.timing(mapFadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(detailsSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(detailsFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [mapFadeAnim, detailsSlideAnim, detailsFadeAnim]);
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.mapContainer}>
+      <Animated.View style={[styles.mapContainer, {opacity: mapFadeAnim}]}>
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: attributes.latitude,
-            longitude: attributes.longitude,
+            latitude: attributes.latitude || -6.1754,
+            longitude: attributes.longitude || 106.8272,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
-          }}
-        >
+          }}>
           <Marker
             coordinate={{
-              latitude: attributes.latitude,
-              longitude: attributes.longitude,
+              latitude: attributes.latitude || -6.1754,
+              longitude: attributes.longitude || 106.8272,
             }}
             title={attributes.label || vehicle.id}
             description={attributes.current_status}
           />
         </MapView>
-      </View>
+      </Animated.View>
 
-      <View style={styles.details}>
+      <Animated.View
+        style={[
+          styles.details,
+          {
+            opacity: detailsFadeAnim,
+            transform: [{translateY: detailsSlideAnim}],
+          },
+        ]}>
         <Text style={styles.title}>Detail Kendaraan</Text>
-        
+
         <View style={styles.row}>
           <Text style={styles.label}>Label:</Text>
           <Text style={styles.value}>{attributes.label || vehicle.id}</Text>
@@ -56,19 +95,25 @@ const DetailScreen = ({ route }: any) => {
 
         <View style={styles.row}>
           <Text style={styles.label}>Update Terakhir:</Text>
-          <Text style={styles.value}>{new Date(attributes.updated_at).toLocaleString()}</Text>
+          <Text style={styles.value}>
+            {new Date(attributes.updated_at).toLocaleString()}
+          </Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Route ID:</Text>
-          <Text style={styles.value}>{vehicle.relationships.route.data?.id || 'N/A'}</Text>
+          <Text style={styles.value}>
+            {vehicle.relationships.route.data?.id || 'N/A'}
+          </Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Trip ID:</Text>
-          <Text style={styles.value}>{vehicle.relationships.trip.data?.id || 'N/A'}</Text>
+          <Text style={styles.value}>
+            {vehicle.relationships.trip.data?.id || 'N/A'}
+          </Text>
         </View>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 };

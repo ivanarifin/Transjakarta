@@ -1,37 +1,100 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Vehicle } from '../types';
+import React, {useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Animated} from 'react-native';
+import {Vehicle} from '../types';
 
 interface Props {
   vehicle: Vehicle;
   onPress: (vehicle: Vehicle) => void;
+  isVisible?: boolean;
 }
 
-const VehicleCard: React.FC<Props> = ({ vehicle, onPress }) => {
-  const { attributes } = vehicle;
-  
+const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => {
+  const {attributes} = vehicle;
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: isVisible ? 1 : 0.3,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: isVisible ? 1 : 0.8,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isVisible, fadeAnim, scaleAnim]);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(vehicle)}>
-      <View style={styles.header}>
-        <Text style={styles.label}>Vehicle: {attributes.label || vehicle.id}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(attributes.current_status) }]}>
-          <Text style={styles.statusText}>{attributes.current_status}</Text>
+    <Animated.View
+      style={[
+        {
+          opacity: fadeAnim,
+          transform: [{scale: scaleAnim}],
+        },
+      ]}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        style={styles.card}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={() => onPress(vehicle)}>
+        <View style={styles.header}>
+          <Text style={styles.label}>
+            Vehicle: {attributes.label || vehicle.id}
+          </Text>
+          <View
+            style={[
+              styles.statusBadge,
+              {backgroundColor: getStatusColor(attributes.current_status)},
+            ]}>
+            <Text style={styles.statusText}>{attributes.current_status}</Text>
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.body}>
-        <Text style={styles.info}>Lat: {attributes.latitude.toFixed(4)} | Long: {attributes.longitude.toFixed(4)}</Text>
-        <Text style={styles.time}>Updated: {new Date(attributes.updated_at).toLocaleString()}</Text>
-      </View>
-    </TouchableOpacity>
+
+        <View style={styles.body}>
+          <Text style={styles.info}>
+            Lat: {attributes.latitude?.toFixed(4) || 'N/A'} | Long:{' '}
+            {attributes.longitude?.toFixed(4) || 'N/A'}
+          </Text>
+          <Text style={styles.time}>
+            Updated: {new Date(attributes.updated_at).toLocaleString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'IN_TRANSIT_TO': return '#4CAF50';
-    case 'STOPPED_AT': return '#F44336';
-    default: return '#FF9800';
+    case 'IN_TRANSIT_TO':
+      return '#4CAF50';
+    case 'STOPPED_AT':
+      return '#F44336';
+    default:
+      return '#FF9800';
   }
 };
 
@@ -44,7 +107,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
