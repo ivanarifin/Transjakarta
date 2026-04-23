@@ -2,6 +2,8 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import GoogleMaps
+import react_native_config
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -17,6 +19,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
+
+    if let googleMapsApiKey = ReactNativeConfig.env(for: "GOOGLE_MAPS_API_KEY") {
+      GMSServices.provideAPIKey(googleMapsApiKey)
+    }
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory

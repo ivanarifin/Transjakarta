@@ -1,18 +1,18 @@
-import { APIResponse, Route, Trip, Vehicle } from '../types';
+import {APIResponse, Route, Trip, Vehicle} from '../types';
 
 const BASE_URL = 'https://api-v3.mbta.com';
 
 export const fetchVehicles = async (
   pageOffset: number = 0,
   routeIds: string[] = [],
-  tripIds: string[] = []
+  tripIds: string[] = [],
 ): Promise<APIResponse<Vehicle>> => {
   let url = `${BASE_URL}/vehicles?page[limit]=10&page[offset]=${pageOffset}&include=route,trip`;
-  
+
   if (routeIds.length > 0) {
     url += `&filter[route]=${routeIds.join(',')}`;
   }
-  
+
   if (tripIds.length > 0) {
     url += `&filter[trip]=${tripIds.join(',')}`;
   }
@@ -28,8 +28,21 @@ export const fetchRoutes = async (): Promise<APIResponse<Route>> => {
   return response.json();
 };
 
-export const fetchTrips = async (): Promise<APIResponse<Trip>> => {
-  const response = await fetch(`${BASE_URL}/trips?page[limit]=20`); // Limit for demo
+export const fetchTrips = async (
+  routeIds: string[] = [
+    'Red',
+    'Orange',
+    'Blue',
+    'Green-B',
+    'Green-C',
+    'Green-D',
+    'Green-E',
+  ],
+): Promise<APIResponse<Trip>> => {
+  const filter = routeIds.join(',');
+  const response = await fetch(
+    `${BASE_URL}/trips?page[limit]=20&filter[route]=${filter}`,
+  );
   if (!response.ok) throw new Error('Failed to fetch trips');
   return response.json();
 };

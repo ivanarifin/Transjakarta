@@ -14,10 +14,13 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'Transjakarta' do
-  config = use_native_modules!
+  target 'Transjakarta' do
+    config = use_native_modules!
 
-  use_react_native!(
+    # React Native Maps dependencies
+    pod 'react-native-maps', :path => '../node_modules/react-native-maps', :subspecs => ['Google', 'Maps']
+
+    use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."

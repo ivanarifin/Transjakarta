@@ -1,30 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView
+  SafeAreaView,
 } from 'react-native';
-import { fetchRoutes, fetchTrips } from '../services/api';
-import { Route, Trip } from '../types';
+import {fetchRoutes, fetchTrips} from '../services/api';
+import {Route, Trip} from '../types';
 
-const FilterScreen = ({ navigation, route }: any) => {
-  const { selectedRoutes: initialRoutes, selectedTrips: initialTrips, onApply } = route.params;
-  
+const FilterScreen = ({navigation, route}: any) => {
+  const {
+    selectedRoutes: initialRoutes,
+    selectedTrips: initialTrips,
+    onApply,
+  } = route.params;
+
   const [routes, setRoutes] = useState<Route[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>(initialRoutes || []);
-  const [selectedTrips, setSelectedTrips] = useState<string[]>(initialTrips || []);
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>(
+    initialRoutes || [],
+  );
+  const [selectedTrips, setSelectedTrips] = useState<string[]>(
+    initialTrips || [],
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const [routesRes, tripsRes] = await Promise.all([fetchRoutes(), fetchTrips()]);
+        const routesRes = await fetchRoutes();
         setRoutes(routesRes.data);
+
+        // Fetch trips for the first few routes to avoid huge requests
+        const routeIds = routesRes.data.slice(0, 10).map(r => r.id);
+        const tripsRes = await fetchTrips(routeIds);
         setTrips(tripsRes.data);
       } catch (error) {
         console.error('Failed to load filters', error);
@@ -35,7 +47,11 @@ const FilterScreen = ({ navigation, route }: any) => {
     loadFilters();
   }, []);
 
-  const toggleSelection = (id: string, list: string[], setList: (l: string[]) => void) => {
+  const toggleSelection = (
+    id: string,
+    list: string[],
+    setList: (l: string[]) => void,
+  ) => {
     if (list.includes(id)) {
       setList(list.filter(item => item !== id));
     } else {
@@ -64,19 +80,21 @@ const FilterScreen = ({ navigation, route }: any) => {
           data={routes}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
+          keyExtractor={item => item.id}
+          renderItem={({item}) => (
+            <TouchableOpacity
               style={[
-                styles.chip, 
-                selectedRoutes.includes(item.id) && styles.chipSelected
+                styles.chip,
+                selectedRoutes.includes(item.id) && styles.chipSelected,
               ]}
-              onPress={() => toggleSelection(item.id, selectedRoutes, setSelectedRoutes)}
-            >
-              <Text style={[
-                styles.chipText,
-                selectedRoutes.includes(item.id) && styles.chipTextSelected
-              ]}>
+              onPress={() =>
+                toggleSelection(item.id, selectedRoutes, setSelectedRoutes)
+              }>
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedRoutes.includes(item.id) && styles.chipTextSelected,
+                ]}>
                 {item.attributes.short_name || item.id}
               </Text>
             </TouchableOpacity>
@@ -84,31 +102,38 @@ const FilterScreen = ({ navigation, route }: any) => {
         />
       </View>
 
-      <View style={[styles.section, { flex: 1 }]}>
+      <View style={[styles.section, {flex: 1}]}>
         <Text style={styles.sectionTitle}>Pilih Trip (Multiple)</Text>
         <FlatList
           data={trips}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
+          keyExtractor={item => item.id}
+          renderItem={({item}) => (
+            <TouchableOpacity
               style={[
-                styles.listItem, 
-                selectedTrips.includes(item.id) && styles.listItemSelected
+                styles.listItem,
+                selectedTrips.includes(item.id) && styles.listItemSelected,
               ]}
-              onPress={() => toggleSelection(item.id, selectedTrips, setSelectedTrips)}
-            >
-              <Text style={styles.listText}>{item.attributes.headsign || item.id}</Text>
-              {selectedTrips.includes(item.id) && <Text style={styles.check}>✓</Text>}
+              onPress={() =>
+                toggleSelection(item.id, selectedTrips, setSelectedTrips)
+              }>
+              <Text style={styles.listText}>
+                {item.attributes.headsign || item.id}
+              </Text>
+              {selectedTrips.includes(item.id) && (
+                <Text style={styles.check}>✓</Text>
+              )}
             </TouchableOpacity>
           )}
         />
       </View>
 
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.resetButton} 
-          onPress={() => { setSelectedRoutes([]); setSelectedTrips([]); }}
-        >
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => {
+            setSelectedRoutes([]);
+            setSelectedTrips([]);
+          }}>
           <Text style={styles.resetText}>Reset</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.applyButton} onPress={handleApply}>

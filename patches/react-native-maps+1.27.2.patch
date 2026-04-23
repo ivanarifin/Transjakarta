@@ -1,0 +1,20 @@
+diff --git a/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt b/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
+index ddb85f5..db03aff 100644
+--- a/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
++++ b/node_modules/react-native-maps/android/src/main/jni/CMakeLists.txt
+@@ -5,6 +5,7 @@
+ 
+ cmake_minimum_required(VERSION 3.13)
+ set(CMAKE_VERBOSE_MAKEFILE on)
++set(CMAKE_CXX_STANDARD 20)
+ 
+ file(GLOB react_codegen_SRCS CONFIGURE_DEPENDS *.cpp react/renderer/components/RNMapsSpecs/*.cpp)
+ 
+@@ -25,4 +26,6 @@ target_link_libraries(
+   reactnative
+ )
+ 
+-target_compile_reactnative_options(react_codegen_RNMapsSpecs PRIVATE)
++if(COMMAND target_compile_reactnative_options)
++  target_compile_reactnative_options(react_codegen_RNMapsSpecs PRIVATE)
++endif()
