@@ -18,6 +18,9 @@ export const lightColors = {
   retryText: '#fff',
   shimmer: '#E1E1E1',
   cardShadow: '#000000',
+  splashBg: '#0D1B2A',
+  splashAccent: '#E63946',
+  splashText: '#FFFFFF',
 };
 
 export const darkColors = {
@@ -40,6 +43,9 @@ export const darkColors = {
   retryText: '#fff',
   shimmer: '#2C2C2E',
   cardShadow: '#000000',
+  splashBg: '#0D1B2A',
+  splashAccent: '#E63946',
+  splashText: '#FFFFFF',
 };
 
 export type ThemeColors = typeof lightColors;

@@ -8,6 +8,7 @@ import {useTheme} from '../theme/ThemeContext';
 import HomeScreen from '../screens/HomeScreen';
 import DetailScreen from '../screens/DetailScreen';
 import FilterScreen from '../screens/FilterScreen';
+import SplashScreen from '../screens/SplashScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,13 +23,18 @@ const AppNavigator = () => {
         backgroundColor={colors.header}
       />
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="Splash"
         screenOptions={{
           animation: 'slide_from_right',
           headerStyle: {backgroundColor: colors.header},
           headerTintColor: colors.text,
           headerShadowVisible: false,
         }}>
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{headerShown: false}}
+        />
         <Stack.Screen
           name="Home"
           component={HomeScreen}
