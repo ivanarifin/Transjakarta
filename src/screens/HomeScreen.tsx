@@ -28,8 +28,10 @@ if (
 import {fetchVehicles} from '../services/api';
 import {Vehicle} from '../types';
 import VehicleCard from '../components/VehicleCard';
+import {useTheme} from '../theme/ThemeContext';
 
 const HomeScreen = ({navigation}: any) => {
+  const {colors, toggleTheme, isDark} = useTheme();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -138,6 +140,18 @@ const HomeScreen = ({navigation}: any) => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={{
+            marginLeft: 15,
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Text style={{fontSize: 20}}>{isDark ? '☀️' : '🌙'}</Text>
+        </TouchableOpacity>
+      ),
       headerRight: () => {
         const scale = new Animated.Value(1);
         const onPressIn = () => {
@@ -177,7 +191,9 @@ const HomeScreen = ({navigation}: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{color: '#007AFF', fontWeight: 'bold'}}>Filter</Text>
+              <Text style={{color: colors.primary, fontWeight: 'bold'}}>
+                Filter
+              </Text>
             </TouchableOpacity>
           </Animated.View>
         );
@@ -202,33 +218,47 @@ const HomeScreen = ({navigation}: any) => {
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
-      <ActivityIndicator style={{margin: 20}} size="large" color="#0000ff" />
+      <ActivityIndicator
+        style={{margin: 20}}
+        size="large"
+        color={colors.primary}
+      />
     );
   };
 
   if (loading && vehicles.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
+      <View style={[styles.center, {backgroundColor: colors.background}]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error && vehicles.length === 0) {
     return (
-      <Animated.View style={[styles.center, {opacity: contentFadeAnim}]}>
-        <Text style={styles.errorText}>{error}</Text>
+      <Animated.View
+        style={[
+          styles.center,
+          {opacity: contentFadeAnim, backgroundColor: colors.background},
+        ]}>
+        <Text style={[styles.errorText, {color: colors.error}]}>{error}</Text>
         <TouchableOpacity
-          style={styles.retryButton}
+          style={[styles.retryButton, {backgroundColor: colors.retryButton}]}
           onPress={() => loadData(0)}>
-          <Text style={styles.retryText}>Coba Lagi</Text>
+          <Text style={[styles.retryText, {color: colors.retryText}]}>
+            Coba Lagi
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
   }
 
   return (
-    <Animated.View style={[styles.container, {opacity: contentFadeAnim}]}>
+    <Animated.View
+      style={[
+        styles.container,
+        {opacity: contentFadeAnim, backgroundColor: colors.background},
+      ]}>
       <FlatList
         data={vehicles}
         showsVerticalScrollIndicator={false}
@@ -246,12 +276,17 @@ const HomeScreen = ({navigation}: any) => {
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
         }
         ListEmptyComponent={
           !loading ? (
             <View>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, {color: colors.subText}]}>
                 Tidak ada kendaraan ditemukan.
               </Text>
             </View>
@@ -265,7 +300,6 @@ const HomeScreen = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   center: {
     flex: 1,
@@ -274,24 +308,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: 'red',
     textAlign: 'center',
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,
   },
   retryText: {
-    color: '#fff',
     fontWeight: 'bold',
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 50,
-    color: '#666',
   },
 });
 

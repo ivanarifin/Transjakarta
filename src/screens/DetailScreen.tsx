@@ -10,8 +10,10 @@ import {
 import MapView, {Marker} from 'react-native-maps';
 import Config from 'react-native-config';
 import {Vehicle} from '../types';
+import {useTheme} from '../theme/ThemeContext';
 
 const DetailScreen = ({route}: any) => {
+  const {colors} = useTheme();
   const {vehicle}: {vehicle: Vehicle} = route.params;
   const {attributes} = vehicle;
 
@@ -42,7 +44,8 @@ const DetailScreen = ({route}: any) => {
   }, [mapFadeAnim, detailsSlideAnim, detailsFadeAnim]);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, {backgroundColor: colors.background}]}>
       <Animated.View style={[styles.mapContainer, {opacity: mapFadeAnim}]}>
         <MapView
           style={styles.map}
@@ -71,45 +74,55 @@ const DetailScreen = ({route}: any) => {
             transform: [{translateY: detailsSlideAnim}],
           },
         ]}>
-        <Text style={styles.title}>Detail Kendaraan</Text>
+        <Text style={[styles.title, {color: colors.text}]}>Detail Kendaraan</Text>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Label:</Text>
-          <Text style={styles.value}>{attributes.label || vehicle.id}</Text>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Label:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
+            {attributes.label || vehicle.id}
+          </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Status:</Text>
-          <Text style={styles.value}>{attributes.current_status}</Text>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Status:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
+            {attributes.current_status}
+          </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Latitude:</Text>
-          <Text style={styles.value}>{attributes.latitude}</Text>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Latitude:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
+            {attributes.latitude}
+          </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Longitude:</Text>
-          <Text style={styles.value}>{attributes.longitude}</Text>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Longitude:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
+            {attributes.longitude}
+          </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Update Terakhir:</Text>
-          <Text style={styles.value}>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            Update Terakhir:
+          </Text>
+          <Text style={[styles.value, {color: colors.text}]}>
             {new Date(attributes.updated_at).toLocaleString()}
           </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Route ID:</Text>
-          <Text style={styles.value}>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Route ID:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
             {vehicle.relationships.route.data?.id || 'N/A'}
           </Text>
         </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Trip ID:</Text>
-          <Text style={styles.value}>
+        <View style={[styles.row, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.label, {color: colors.subText}]}>Trip ID:</Text>
+          <Text style={[styles.value, {color: colors.text}]}>
             {vehicle.relationships.trip.data?.id || 'N/A'}
           </Text>
         </View>
@@ -121,7 +134,6 @@ const DetailScreen = ({route}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   mapContainer: {
     height: 300,
@@ -137,23 +149,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   label: {
     fontSize: 16,
-    color: '#666',
     fontWeight: '600',
   },
   value: {
     fontSize: 16,
-    color: '#333',
     flex: 1,
     textAlign: 'right',
     marginLeft: 10,

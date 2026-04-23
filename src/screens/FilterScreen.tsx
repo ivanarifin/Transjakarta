@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {fetchRoutes, fetchTrips} from '../services/api';
 import {Route, Trip} from '../types';
+import {useTheme} from '../theme/ThemeContext';
 
 const FilterChip = ({
   item,
@@ -39,15 +40,29 @@ const FilterChip = ({
     }).start();
   };
 
+  const {colors} = useTheme();
+
   return (
     <Animated.View style={{transform: [{scale}]}}>
       <TouchableOpacity
         activeOpacity={0.8}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
-        style={[styles.chip, isSelected && styles.chipSelected]}
+        style={[
+          styles.chip,
+          {backgroundColor: colors.sectionBg, borderColor: colors.chipBorder},
+          isSelected && {
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+          },
+        ]}
         onPress={onPress}>
-        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+        <Text
+          style={[
+            styles.chipText,
+            {color: colors.subText},
+            isSelected && {color: '#fff', fontWeight: 'bold'},
+          ]}>
           {item.attributes.short_name || item.id}
         </Text>
       </TouchableOpacity>
@@ -112,6 +127,7 @@ const FilterListItem = ({
   isSelected: boolean;
   onPress: () => void;
 }) => {
+  const {colors} = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
 
   const onPressIn = () => {
@@ -136,16 +152,25 @@ const FilterListItem = ({
         activeOpacity={0.7}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
-        style={[styles.listItem, isSelected && styles.listItemSelected]}
+        style={[
+          styles.listItem,
+          {borderBottomColor: colors.background},
+          isSelected && {backgroundColor: colors.listItemSelected},
+        ]}
         onPress={onPress}>
-        <Text style={styles.listText}>{item.attributes.headsign || item.id}</Text>
-        {isSelected && <Text style={styles.check}>✓</Text>}
+        <Text style={[styles.listText, {color: colors.text}]}>
+          {item.attributes.headsign || item.id}
+        </Text>
+        {isSelected && (
+          <Text style={[styles.check, {color: colors.primary}]}>✓</Text>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
 const FilterScreen = ({navigation, route}: any) => {
+  const {colors} = useTheme();
   const {
     selectedRoutes: initialRoutes,
     selectedTrips: initialTrips,
@@ -228,14 +253,15 @@ const FilterScreen = ({navigation, route}: any) => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.center, {backgroundColor: colors.background}]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, {backgroundColor: colors.background}]}>
       <Animated.View
         style={[
           {flex: 1},
@@ -244,58 +270,68 @@ const FilterScreen = ({navigation, route}: any) => {
             transform: [{translateY: slideAnim}],
           },
         ]}>
-        <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pilih Rute (Multiple)</Text>
-        <FlatList
-          data={routes}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <FilterChip
-              item={item}
-              isSelected={selectedRoutes.includes(item.id)}
-              onPress={() =>
-                toggleSelection(item.id, selectedRoutes, setSelectedRoutes)
-              }
-            />
-          )}
-        />
-      </View>
+        <View style={[styles.section, {borderBottomColor: colors.border}]}>
+          <Text style={[styles.sectionTitle, {color: colors.text}]}>
+            Pilih Rute (Multiple)
+          </Text>
+          <FlatList
+            data={routes}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            renderItem={({item}) => (
+              <FilterChip
+                item={item}
+                isSelected={selectedRoutes.includes(item.id)}
+                onPress={() =>
+                  toggleSelection(item.id, selectedRoutes, setSelectedRoutes)
+                }
+              />
+            )}
+          />
+        </View>
 
-      <View style={[styles.section, {flex: 1}]}>
-        <Text style={styles.sectionTitle}>Pilih Trip (Multiple)</Text>
-        <FlatList
-          data={trips}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <FilterListItem
-              item={item}
-              isSelected={selectedTrips.includes(item.id)}
-              onPress={() =>
-                toggleSelection(item.id, selectedTrips, setSelectedTrips)
-              }
-            />
-          )}
-        />
-      </View>
+        <View
+          style={[styles.section, {flex: 1, borderBottomColor: colors.border}]}>
+          <Text style={[styles.sectionTitle, {color: colors.text}]}>
+            Pilih Trip (Multiple)
+          </Text>
+          <FlatList
+            data={trips}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            renderItem={({item}) => (
+              <FilterListItem
+                item={item}
+                isSelected={selectedTrips.includes(item.id)}
+                onPress={() =>
+                  toggleSelection(item.id, selectedTrips, setSelectedTrips)
+                }
+              />
+            )}
+          />
+        </View>
 
-      <View style={styles.footer}>
-        <AnimatedButton
-          style={styles.resetButton}
-          onPress={() => {
-            setSelectedRoutes([]);
-            setSelectedTrips([]);
-          }}>
-          <Text style={styles.resetText}>Reset</Text>
-        </AnimatedButton>
-        <AnimatedButton
-          style={[styles.applyButton, {flex: 2}]}
-          onPress={handleApply}>
-          <Text style={styles.applyText}>Terapkan Filter</Text>
-        </AnimatedButton>
-      </View>
+        <View style={styles.footer}>
+          <AnimatedButton
+            style={[styles.resetButton, {borderColor: colors.border}]}
+            onPress={() => {
+              setSelectedRoutes([]);
+              setSelectedTrips([]);
+            }}>
+            <Text style={[styles.resetText, {color: colors.subText}]}>
+              Reset
+            </Text>
+          </AnimatedButton>
+          <AnimatedButton
+            style={[
+              styles.applyButton,
+              {flex: 2, backgroundColor: colors.primary},
+            ]}
+            onPress={handleApply}>
+            <Text style={styles.applyText}>Terapkan Filter</Text>
+          </AnimatedButton>
+        </View>
       </Animated.View>
     </SafeAreaView>
   );
@@ -304,7 +340,6 @@ const FilterScreen = ({navigation, route}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   center: {
     flex: 1,
@@ -314,53 +349,36 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#333',
   },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  chipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  chipText: {
-    color: '#666',
-  },
-  chipTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  chipSelected: {},
+  chipText: {},
+  chipTextSelected: {},
   listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#f9f9f9',
   },
-  listItemSelected: {
-    backgroundColor: '#f0f7ff',
-  },
+  listItemSelected: {},
   listText: {
     fontSize: 14,
-    color: '#444',
   },
   check: {
-    color: '#007AFF',
     fontWeight: 'bold',
   },
   footer: {
@@ -373,18 +391,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
     alignItems: 'center',
   },
   resetText: {
-    color: '#666',
     fontWeight: 'bold',
   },
   applyButton: {
     flex: 2,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
     alignItems: 'center',
   },
   applyText: {

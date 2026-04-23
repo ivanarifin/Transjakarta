@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Animated} from 'react-native';
 import {Vehicle} from '../types';
+import {useTheme} from '../theme/ThemeContext';
 
 interface Props {
   vehicle: Vehicle;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => {
+  const {colors} = useTheme();
   const {attributes} = vehicle;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -56,12 +58,18 @@ const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => 
       ]}>
       <TouchableOpacity
         activeOpacity={0.9}
-        style={styles.card}
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.card,
+            shadowColor: colors.text,
+          },
+        ]}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={() => onPress(vehicle)}>
         <View style={styles.header}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, {color: colors.text}]}>
             Vehicle: {attributes.label || vehicle.id}
           </Text>
           <View
@@ -73,12 +81,12 @@ const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => 
           </View>
         </View>
 
-        <View style={styles.body}>
-          <Text style={styles.info}>
+        <View style={[styles.body, {borderTopColor: colors.border}]}>
+          <Text style={[styles.info, {color: colors.subText}]}>
             Lat: {attributes.latitude?.toFixed(4) || 'N/A'} | Long:{' '}
             {attributes.longitude?.toFixed(4) || 'N/A'}
           </Text>
-          <Text style={styles.time}>
+          <Text style={[styles.time, {color: colors.mutedText}]}>
             Updated: {new Date(attributes.updated_at).toLocaleString()}
           </Text>
         </View>
@@ -100,13 +108,11 @@ const getStatusColor = (status: string) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
     elevation: 3,
-    shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -120,7 +126,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -134,17 +139,14 @@ const styles = StyleSheet.create({
   },
   body: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
     paddingTop: 12,
   },
   info: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   time: {
     fontSize: 12,
-    color: '#999',
   },
 });
 
