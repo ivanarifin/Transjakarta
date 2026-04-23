@@ -173,6 +173,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
     borderColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chipSelected: {
     backgroundColor: '#007AFF',

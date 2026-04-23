@@ -1,50 +1,58 @@
-import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { 
-  View, 
-  FlatList, 
-  ActivityIndicator, 
-  StyleSheet, 
-  Text, 
+import React, {useEffect, useState, useCallback, useLayoutEffect} from 'react';
+import {
+  View,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
   RefreshControl,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
-import { fetchVehicles } from '../services/api';
-import { Vehicle } from '../types';
+import {fetchVehicles} from '../services/api';
+import {Vehicle} from '../types';
 import VehicleCard from '../components/VehicleCard';
 
-const HomeScreen = ({ navigation }: any) => {
+const HomeScreen = ({navigation}: any) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  
+
   // Filter states
   const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
   const [selectedTrips, setSelectedTrips] = useState<string[]>([]);
 
-  const loadData = useCallback(async (newOffset: number, isRefresh: boolean = false, routes: string[] = [], trips: string[] = []) => {
-    try {
-      if (!isRefresh) setLoading(true);
-      setError(null);
-      
-      const response = await fetchVehicles(newOffset, routes, trips);
-      
-      if (isRefresh) {
-        setVehicles(response.data);
-      } else {
-        setVehicles(prev => [...prev, ...response.data]);
+  const loadData = useCallback(
+    async (
+      newOffset: number,
+      isRefresh: boolean = false,
+      routes: string[] = [],
+      trips: string[] = [],
+    ) => {
+      try {
+        if (!isRefresh) setLoading(true);
+        setError(null);
+
+        const response = await fetchVehicles(newOffset, routes, trips);
+
+        if (isRefresh) {
+          setVehicles(response.data);
+        } else {
+          setVehicles(prev => [...prev, ...response.data]);
+        }
+
+        setHasMore(response.data.length === 10);
+      } catch (err) {
+        setError('Gagal mengambil data kendaraan. Coba lagi nanti.');
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-      
-      setHasMore(response.data.length === 10);
-    } catch (err) {
-      setError('Gagal mengambil data kendaraan. Coba lagi nanti.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     loadData(0, true, selectedRoutes, selectedTrips);
@@ -53,19 +61,25 @@ const HomeScreen = ({ navigation }: any) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('Filter', {
-            selectedRoutes,
-            selectedTrips,
-            onApply: (routes: string[], trips: string[]) => {
-              setSelectedRoutes(routes);
-              setSelectedTrips(trips);
-              setOffset(0);
-            }
-          })}
-          style={{ marginRight: 15 }}
-        >
-          <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>Filter</Text>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('Filter', {
+              selectedRoutes,
+              selectedTrips,
+              onApply: (routes: string[], trips: string[]) => {
+                setSelectedRoutes(routes);
+                setSelectedTrips(trips);
+                setOffset(0);
+              },
+            })
+          }
+          style={{
+            marginRight: 15,
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Text style={{color: '#007AFF', fontWeight: 'bold'}}>Filter</Text>
         </TouchableOpacity>
       ),
     });
@@ -87,14 +101,18 @@ const HomeScreen = ({ navigation }: any) => {
 
   const renderFooter = () => {
     if (!loading) return null;
-    return <ActivityIndicator style={{ margin: 20 }} size="large" color="#0000ff" />;
+    return (
+      <ActivityIndicator style={{margin: 20}} size="large" color="#0000ff" />
+    );
   };
 
   if (error && vehicles.length === 0) {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => loadData(0)}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => loadData(0)}>
           <Text style={styles.retryText}>Coba Lagi</Text>
         </TouchableOpacity>
       </View>
@@ -105,11 +123,11 @@ const HomeScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <FlatList
         data={vehicles}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <VehicleCard 
-            vehicle={item} 
-            onPress={(v) => navigation.navigate('Detail', { vehicle: v })} 
+        keyExtractor={item => item.id}
+        renderItem={({item}) => (
+          <VehicleCard
+            vehicle={item}
+            onPress={v => navigation.navigate('Detail', {vehicle: v})}
           />
         )}
         onEndReached={loadMore}
@@ -119,7 +137,9 @@ const HomeScreen = ({ navigation }: any) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          !loading ? <Text style={styles.emptyText}>Tidak ada kendaraan ditemukan.</Text> : null
+          !loading ? (
+            <Text style={styles.emptyText}>Tidak ada kendaraan ditemukan.</Text>
+          ) : null
         }
       />
     </View>
