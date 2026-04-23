@@ -6,6 +6,7 @@ export const fetchVehicles = async (
   pageOffset: number = 0,
   routeIds: string[] = [],
   tripIds: string[] = [],
+  label: string = '',
 ): Promise<APIResponse<Vehicle>> => {
   let url = `${BASE_URL}/vehicles?page[limit]=10&page[offset]=${pageOffset}&include=route,trip`;
 
@@ -15,6 +16,10 @@ export const fetchVehicles = async (
 
   if (tripIds.length > 0) {
     url += `&filter[trip]=${tripIds.join(',')}`;
+  }
+
+  if (label.trim().length > 0) {
+    url += `&filter[label]=${encodeURIComponent(label.trim())}`;
   }
 
   const response = await fetch(url);

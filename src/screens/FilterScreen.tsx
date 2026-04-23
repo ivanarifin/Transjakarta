@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   Animated,
+  Platform,
 } from 'react-native';
 import {fetchRoutes, fetchTrips} from '../services/api';
 import {Route, Trip} from '../types';
@@ -23,7 +24,16 @@ const FilterChip = ({
   isSelected: boolean;
   onPress: () => void;
 }) => {
+  const {colors} = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
+  const selectionAnim = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(selectionAnim, {
+      toValue: isSelected ? 1 : 0,
+      useNativeDriver: false, // Animating background color
+    }).start();
+  }, [isSelected, selectionAnim]);
 
   const onPressIn = () => {
     Animated.spring(scale, {
@@ -41,7 +51,20 @@ const FilterChip = ({
     }).start();
   };
 
-  const {colors} = useTheme();
+  const backgroundColor = selectionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.sectionBg, colors.primary],
+  });
+
+  const borderColor = selectionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.chipBorder, colors.primary],
+  });
+
+  const textColor = selectionAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.subText, '#FFFFFF'],
+  });
 
   return (
     <Animated.View style={{transform: [{scale}]}}>
@@ -49,71 +72,23 @@ const FilterChip = ({
         activeOpacity={0.8}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
-        style={[
-          styles.chip,
-          {backgroundColor: colors.sectionBg, borderColor: colors.chipBorder},
-          isSelected && {
-            backgroundColor: colors.primary,
-            borderColor: colors.primary,
-          },
-        ]}
         onPress={onPress}>
-        <Text
+        <Animated.View
           style={[
-            styles.chipText,
-            {color: colors.subText},
-            isSelected && {color: '#fff', fontWeight: 'bold'},
+            styles.chip,
+            {
+              backgroundColor,
+              borderColor,
+            },
           ]}>
-          {item.attributes.short_name || item.id}
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
-const AnimatedButton = ({
-  children,
-  onPress,
-  style,
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-  style?: any;
-}) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const onPressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      friction: 3,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View style={[{flex: 1}, style, {transform: [{scale}]}]}>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        onPress={onPress}
-        style={StyleSheet.absoluteFill}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          {children}
-        </View>
+          <Animated.Text
+            style={[
+              styles.chipText,
+              {color: textColor, fontWeight: isSelected ? 'bold' : 'normal'},
+            ]}>
+            {item.attributes.short_name || item.id}
+          </Animated.Text>
+        </Animated.View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -130,6 +105,14 @@ const FilterListItem = ({
 }) => {
   const {colors} = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
+  const accentWidth = useRef(new Animated.Value(isSelected ? 4 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(accentWidth, {
+      toValue: isSelected ? 4 : 0,
+      useNativeDriver: false,
+    }).start();
+  }, [isSelected, accentWidth]);
 
   const onPressIn = () => {
     Animated.spring(scale, {
@@ -155,16 +138,30 @@ const FilterListItem = ({
         onPressOut={onPressOut}
         style={[
           styles.listItem,
-          {borderBottomColor: colors.background},
-          isSelected && {backgroundColor: colors.listItemSelected},
+          {borderBottomColor: colors.border},
+          isSelected && {backgroundColor: colors.sectionBg},
         ]}
         onPress={onPress}>
-        <Text style={[styles.listText, {color: colors.text}]}>
-          {item.attributes.headsign || item.id}
-        </Text>
-        {isSelected && (
-          <Text style={[styles.check, {color: colors.primary}]}>✓</Text>
-        )}
+        <Animated.View
+          style={[
+            styles.listAccent,
+            {backgroundColor: colors.primary, width: accentWidth},
+          ]}
+        />
+        <View style={styles.listItemContent}>
+          <Text
+            style={[
+              styles.listText,
+              {color: colors.text, fontWeight: isSelected ? '600' : '400'},
+            ]}>
+            {item.attributes.headsign || item.id}
+          </Text>
+          {isSelected && (
+            <View style={[styles.checkCircle, {backgroundColor: colors.primary}]}>
+              <Text style={styles.checkIcon}>✓</Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -213,16 +210,13 @@ const FilterScreen = ({navigation, route}: any) => {
     const loadFilters = async () => {
       try {
         const routesRes = await fetchRoutes();
-        // Ensure unique routes
         const uniqueRoutes = Array.from(
           new Map(routesRes.data.map(r => [r.id, r])).values(),
         );
         setRoutes(uniqueRoutes);
 
-        // Fetch trips for the first few routes to avoid huge requests
         const routeIds = uniqueRoutes.slice(0, 10).map(r => r.id);
         const tripsRes = await fetchTrips(routeIds);
-        // Ensure unique trips
         const uniqueTrips = Array.from(
           new Map(tripsRes.data.map(t => [t.id, t])).values(),
         );
@@ -272,15 +266,20 @@ const FilterScreen = ({navigation, route}: any) => {
             transform: [{translateY: slideAnim}],
           },
         ]}>
-        <View style={[styles.section, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>
-            {t('filter.selectRoute')}
-          </Text>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.titleContainer, {borderBottomColor: colors.primary}]}>
+              <Text style={[styles.sectionTitle, {color: colors.text}]}>
+                {t('filter.selectRoute')}
+              </Text>
+            </View>
+          </View>
           <FlatList
             data={routes}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={item => item.id}
+            contentContainerStyle={styles.chipList}
             renderItem={({item}) => (
               <FilterChip
                 item={item}
@@ -293,11 +292,14 @@ const FilterScreen = ({navigation, route}: any) => {
           />
         </View>
 
-        <View
-          style={[styles.section, {flex: 1, borderBottomColor: colors.border}]}>
-          <Text style={[styles.sectionTitle, {color: colors.text}]}>
-            {t('filter.selectTrip')}
-          </Text>
+        <View style={[styles.section, {flex: 1}]}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.titleContainer, {borderBottomColor: colors.primary}]}>
+              <Text style={[styles.sectionTitle, {color: colors.text}]}>
+                {t('filter.selectTrip')}
+              </Text>
+            </View>
+          </View>
           <FlatList
             data={trips}
             showsVerticalScrollIndicator={false}
@@ -314,8 +316,8 @@ const FilterScreen = ({navigation, route}: any) => {
           />
         </View>
 
-        <View style={styles.footer}>
-          <AnimatedButton
+        <View style={[styles.footer, {backgroundColor: colors.card}]}>
+          <TouchableOpacity
             style={[styles.resetButton, {borderColor: colors.border}]}
             onPress={() => {
               setSelectedRoutes([]);
@@ -324,15 +326,12 @@ const FilterScreen = ({navigation, route}: any) => {
             <Text style={[styles.resetText, {color: colors.subText}]}>
               {t('filter.reset')}
             </Text>
-          </AnimatedButton>
-          <AnimatedButton
-            style={[
-              styles.applyButton,
-              {flex: 2, backgroundColor: colors.primary},
-            ]}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.applyButton, {backgroundColor: colors.primary}]}
             onPress={handleApply}>
             <Text style={styles.applyText}>{t('filter.apply')}</Text>
-          </AnimatedButton>
+          </TouchableOpacity>
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -349,64 +348,133 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   section: {
-    padding: 16,
-    borderBottomWidth: 1,
+    paddingVertical: 20,
+  },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    alignItems: 'flex-start',
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
+  },
+  titleContainer: {
+    alignSelf: 'flex-start',
+    borderBottomWidth: 3,
+    paddingBottom: 4,
+  },
+  chipList: {
+    paddingHorizontal: 16,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
+    marginHorizontal: 4,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  chipText: {
+    fontSize: 14,
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  listAccent: {
+    height: '60%',
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+  },
+  listItemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  listText: {
+    fontSize: 16,
+  },
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  chipSelected: {},
-  chipText: {},
-  chipTextSelected: {},
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-  },
-  listItemSelected: {},
-  listText: {
+  checkIcon: {
+    color: '#fff',
     fontSize: 14,
-  },
-  check: {
     fontWeight: 'bold',
   },
   footer: {
-    padding: 16,
+    padding: 20,
     flexDirection: 'row',
     gap: 12,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: -4},
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   resetButton: {
     flex: 1,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   resetText: {
     fontWeight: 'bold',
+    fontSize: 16,
   },
   applyButton: {
     flex: 2,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   applyText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

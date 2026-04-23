@@ -17,6 +17,7 @@ import {
   Platform,
   UIManager,
   Animated,
+  TextInput,
 } from 'react-native';
 
 if (
@@ -28,8 +29,43 @@ if (
 import {fetchVehicles} from '../services/api';
 import {Vehicle} from '../types';
 import VehicleCard from '../components/VehicleCard';
+import SkeletonCard from '../components/SkeletonCard';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
+
+const ThemeToggle = ({isDark, toggleTheme}: any) => {
+  const rotate = useRef(new Animated.Value(0)).current;
+  const onPress = () => {
+    Animated.timing(rotate, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      rotate.setValue(0);
+      toggleTheme();
+    });
+  };
+
+  const rotation = rotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        marginLeft: 15,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+      <Animated.Text style={{fontSize: 22, transform: [{rotate: rotation}]}}>
+        {isDark ? '☀️' : '🌙'}
+      </Animated.Text>
+    </TouchableOpacity>
+  );
+};
 
 const HomeScreen = ({navigation}: any) => {
   const {t} = useTranslation();
@@ -42,6 +78,16 @@ const HomeScreen = ({navigation}: any) => {
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchAnim = useRef(new Animated.Value(0)).current;
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const [showFab, setShowFab] = useState(false);
+  const fabAnim = useRef(new Animated.Value(0)).current;
+  const listRef = useRef<FlatList>(null);
 
   const contentFadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -56,6 +102,20 @@ const HomeScreen = ({navigation}: any) => {
       contentFadeAnim.setValue(0);
     }
   }, [loading, contentFadeAnim]);
+
+  useEffect(() => {
+    Animated.spring(searchAnim, {
+      toValue: isSearchVisible ? 1 : 0,
+      useNativeDriver: false,
+    }).start();
+  }, [isSearchVisible, searchAnim]);
+
+  useEffect(() => {
+    Animated.spring(fabAnim, {
+      toValue: showFab ? 1 : 0,
+      useNativeDriver: true,
+    }).start();
+  }, [showFab, fabAnim]);
 
   // Track visible items for animation
   const [visibleItemIds, setVisibleItemIds] = useState<Set<string>>(new Set());
@@ -84,6 +144,7 @@ const HomeScreen = ({navigation}: any) => {
       isRefresh: boolean = false,
       routes: string[] = [],
       trips: string[] = [],
+      label: string = '',
     ) => {
       if (loadingRef.current) return;
 
@@ -91,9 +152,7 @@ const HomeScreen = ({navigation}: any) => {
         loadingRef.current = true;
         setError(null);
 
-        // Determine which loading state to show
         if (isRefresh) {
-          // If it's a refresh but we don't have data yet, show full screen loading
           if (vehicles.length === 0) {
             setLoading(true);
           } else {
@@ -105,7 +164,7 @@ const HomeScreen = ({navigation}: any) => {
           setLoading(true);
         }
 
-        const response = await fetchVehicles(newOffset, routes, trips);
+        const response = await fetchVehicles(newOffset, routes, trips, label);
 
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         if (isRefresh) {
@@ -128,32 +187,32 @@ const HomeScreen = ({navigation}: any) => {
         setRefreshing(false);
       }
     },
-    [vehicles.length],
+    [vehicles.length, t],
   );
 
   useEffect(() => {
-    // When filters change, we want to refresh the data
-    // If we already have data, show the refresh indicator instead of a white screen
     if (vehicles.length > 0) {
       setRefreshing(true);
     }
-    loadData(0, true, selectedRoutes, selectedTrips);
+    loadData(0, true, selectedRoutes, selectedTrips, searchQuery);
   }, [selectedRoutes, selectedTrips]);
+
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    setIsSearching(true);
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(async () => {
+      setOffset(0);
+      await loadData(0, true, selectedRoutes, selectedTrips, text);
+      setIsSearching(false);
+    }, 600);
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={toggleTheme}
-          style={{
-            marginLeft: 15,
-            height: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <Text style={{fontSize: 20}}>{isDark ? '☀️' : '🌙'}</Text>
-        </TouchableOpacity>
-      ),
+      headerLeft: () => <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />,
       headerRight: () => {
         const scale = new Animated.Value(1);
         const onPressIn = () => {
@@ -172,48 +231,60 @@ const HomeScreen = ({navigation}: any) => {
         };
 
         return (
-          <Animated.View style={{transform: [{scale}]}}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <TouchableOpacity
-              onPressIn={onPressIn}
-              onPressOut={onPressOut}
-              onPress={() =>
-                navigation.navigate('Filter', {
-                  selectedRoutes,
-                  selectedTrips,
-                  onApply: (routes: string[], trips: string[]) => {
-                    setSelectedRoutes(routes);
-                    setSelectedTrips(trips);
-                    setOffset(0);
-                  },
-                })
-              }
-              style={{
-                marginRight: 15,
-                height: '100%',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Text style={{color: colors.primary, fontWeight: 'bold'}}>
-                {t('home.filter')}
-              </Text>
+              onPress={() => {
+                if (isSearchVisible && searchQuery !== '') {
+                  handleSearch('');
+                }
+                setIsSearchVisible(!isSearchVisible);
+              }}
+              style={{marginRight: 15}}>
+              <Text style={{fontSize: 20}}>{isSearchVisible ? '❌' : '🔍'}</Text>
             </TouchableOpacity>
-          </Animated.View>
+            <Animated.View style={{transform: [{scale}]}}>
+              <TouchableOpacity
+                onPressIn={onPressIn}
+                onPressOut={onPressOut}
+                onPress={() =>
+                  navigation.navigate('Filter', {
+                    selectedRoutes,
+                    selectedTrips,
+                    onApply: (routes: string[], trips: string[]) => {
+                      setSelectedRoutes(routes);
+                      setSelectedTrips(trips);
+                      setOffset(0);
+                    },
+                  })
+                }
+                style={{
+                  marginRight: 15,
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Text style={{color: colors.primary, fontWeight: 'bold'}}>
+                  {t('home.filter')}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         );
       },
     });
-  }, [navigation, selectedRoutes, selectedTrips, isDark, toggleTheme, colors.primary, t]);
+  }, [navigation, selectedRoutes, selectedTrips, isDark, toggleTheme, colors.primary, t, isSearchVisible, searchQuery]);
 
   const onRefresh = () => {
     setRefreshing(true);
     setOffset(0);
-    loadData(0, true, selectedRoutes, selectedTrips);
+    loadData(0, true, selectedRoutes, selectedTrips, searchQuery);
   };
 
   const loadMore = () => {
     if (!loading && !loadingMore && hasMore) {
       const nextOffset = offset + 10;
       setOffset(nextOffset);
-      loadData(nextOffset, false, selectedRoutes, selectedTrips);
+      loadData(nextOffset, false, selectedRoutes, selectedTrips, searchQuery);
     }
   };
 
@@ -228,10 +299,28 @@ const HomeScreen = ({navigation}: any) => {
     );
   };
 
+  const onScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 300 && !showFab) {
+      setShowFab(true);
+    } else if (offsetY <= 300 && showFab) {
+      setShowFab(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    listRef.current?.scrollToOffset({offset: 0, animated: true});
+  };
+
   if (loading && vehicles.length === 0) {
     return (
-      <View style={[styles.center, {backgroundColor: colors.background}]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={[styles.container, {backgroundColor: colors.background}]}>
+        <FlatList
+          data={[1, 2, 3, 4, 5]}
+          keyExtractor={item => item.toString()}
+          renderItem={() => <SkeletonCard />}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
     );
   }
@@ -243,11 +332,19 @@ const HomeScreen = ({navigation}: any) => {
           styles.center,
           {opacity: contentFadeAnim, backgroundColor: colors.background},
         ]}>
-        <Text style={[styles.errorText, {color: colors.error}]}>{error}</Text>
+        <Text style={{fontSize: 64, marginBottom: 20}}>📡</Text>
+        <Text
+          style={[
+            styles.errorText,
+            {color: colors.text, fontSize: 18, fontWeight: '600'},
+          ]}>
+          {error}
+        </Text>
         <TouchableOpacity
-          style={[styles.retryButton, {backgroundColor: colors.retryButton}]}
-          onPress={() => loadData(0)}>
-          <Text style={[styles.retryText, {color: colors.retryText}]}>
+          activeOpacity={0.8}
+          style={[styles.retryButton, {backgroundColor: colors.primary}]}
+          onPress={() => loadData(0, true, selectedRoutes, selectedTrips, searchQuery)}>
+          <Text style={[styles.retryText, {color: '#fff'}]}>
             {t('home.retry')}
           </Text>
         </TouchableOpacity>
@@ -255,13 +352,61 @@ const HomeScreen = ({navigation}: any) => {
     );
   }
 
+  const searchHeight = searchAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 60],
+  });
+
+  const searchOpacity = searchAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
   return (
     <Animated.View
       style={[
         styles.container,
         {opacity: contentFadeAnim, backgroundColor: colors.background},
       ]}>
+      <Animated.View
+        style={[
+          styles.searchContainer,
+          {
+            height: searchHeight,
+            opacity: searchOpacity,
+            backgroundColor: colors.card,
+            borderBottomColor: colors.border,
+          },
+        ]}>
+        <View style={[styles.searchWrapper, {backgroundColor: colors.background}]}>
+          <TextInput
+            style={[styles.searchInput, {color: colors.text}]}
+            placeholder={t('home.searchPlaceholder') || 'Search vehicle...'}
+            placeholderTextColor={colors.subText}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => handleSearch('')}
+              style={styles.clearButton}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+              <Text style={{color: colors.subText, fontSize: 16}}>✕</Text>
+            </TouchableOpacity>
+          )}
+          {isSearching && (
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={styles.searchLoader}
+            />
+          )}
+        </View>
+      </Animated.View>
       <FlatList
+        ref={listRef}
         data={vehicles}
         showsVerticalScrollIndicator={false}
         keyExtractor={item => item.id}
@@ -277,6 +422,8 @@ const HomeScreen = ({navigation}: any) => {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={renderFooter}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -287,14 +434,32 @@ const HomeScreen = ({navigation}: any) => {
         }
         ListEmptyComponent={
           !loading ? (
-            <View>
-              <Text style={[styles.emptyText, {color: colors.subText}]}>
+            <View style={styles.center}>
+              <Text style={{fontSize: 64, marginBottom: 20}}>🚌</Text>
+              <Text
+                style={[
+                  styles.emptyText,
+                  {color: colors.subText, fontSize: 16, marginTop: 0},
+                ]}>
                 {t('home.empty')}
               </Text>
             </View>
           ) : null
         }
       />
+      <Animated.View
+        style={[
+          styles.fab,
+          {
+            backgroundColor: colors.primary,
+            transform: [{scale: fabAnim}],
+            opacity: fabAnim,
+          },
+        ]}>
+        <TouchableOpacity onPress={scrollToTop} style={styles.fabButton}>
+          <Text style={styles.fabIcon}>↑</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </Animated.View>
   );
 };
@@ -314,9 +479,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 24,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   retryText: {
     fontWeight: 'bold',
@@ -324,6 +494,56 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginTop: 50,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    overflow: 'hidden',
+  },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    height: 40,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 16,
+    padding: 0,
+  },
+  searchLoader: {
+    marginLeft: 8,
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  fabButton: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fabIcon: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

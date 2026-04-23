@@ -8,7 +8,8 @@
     "filter": "Filter",
     "errorMessage": "Gagal mengambil data kendaraan. Coba lagi nanti.",
     "retry": "Coba Lagi",
-    "empty": "Tidak ada kendaraan ditemukan."
+    "empty": "Tidak ada kendaraan ditemukan.",
+    "searchPlaceholder": "Cari ID atau label kendaraan..."
   },
   "detail": {
     "title": "Detail Kendaraan",

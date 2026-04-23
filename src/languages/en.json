@@ -8,7 +8,8 @@
     "filter": "Filter",
     "errorMessage": "Failed to fetch vehicle data. Please try again later.",
     "retry": "Try Again",
-    "empty": "No vehicles found."
+    "empty": "No vehicles found.",
+    "searchPlaceholder": "Search vehicle ID or label..."
   },
   "detail": {
     "title": "Vehicle Detail",
