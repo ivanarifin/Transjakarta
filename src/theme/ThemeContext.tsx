@@ -23,26 +23,41 @@ export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (savedTheme === 'light' || savedTheme === 'dark') {
-          setTheme(savedTheme);
+        // Check if AsyncStorage is available before using it
+        if (AsyncStorage) {
+          const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+          if (savedTheme === 'light' || savedTheme === 'dark') {
+            setTheme(savedTheme);
+          }
         }
-      } catch (error) {
-        console.error('Failed to load theme preference', error);
+      } catch (error: any) {
+        // Gracefully handle "Native module is null" error which can happen in some environments
+        if (error?.message?.includes('Native module is null')) {
+          console.warn('AsyncStorage native module not available, using default theme');
+        } else {
+          console.error('Failed to load theme preference', error);
+        }
       }
     };
     loadTheme();
   }, []);
 
-  const toggleTheme = async () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    } catch (error) {
-      console.error('Failed to save theme preference', error);
-    }
-  };
+  const toggleTheme = React.useCallback(async () => {
+    setTheme(prev => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      // Save to AsyncStorage as a side effect
+      if (AsyncStorage) {
+        AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme).catch(error => {
+          if (error?.message?.includes('Native module is null')) {
+            console.warn('AsyncStorage native module not available, theme preference not saved');
+          } else {
+            console.error('Failed to save theme preference', error);
+          }
+        });
+      }
+      return newTheme;
+    });
+  }, []);
 
   const isDark = theme === 'dark';
   const colors = isDark ? darkColors : lightColors;

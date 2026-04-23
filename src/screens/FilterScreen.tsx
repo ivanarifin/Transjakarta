@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {fetchRoutes, fetchTrips} from '../services/api';
 import {Route, Trip} from '../types';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
 
 const FilterChip = ({
@@ -170,6 +171,7 @@ const FilterListItem = ({
 };
 
 const FilterScreen = ({navigation, route}: any) => {
+  const {t} = useTranslation();
   const {colors} = useTheme();
   const {
     selectedRoutes: initialRoutes,
@@ -272,7 +274,7 @@ const FilterScreen = ({navigation, route}: any) => {
         ]}>
         <View style={[styles.section, {borderBottomColor: colors.border}]}>
           <Text style={[styles.sectionTitle, {color: colors.text}]}>
-            Pilih Rute (Multiple)
+            {t('filter.selectRoute')}
           </Text>
           <FlatList
             data={routes}
@@ -294,7 +296,7 @@ const FilterScreen = ({navigation, route}: any) => {
         <View
           style={[styles.section, {flex: 1, borderBottomColor: colors.border}]}>
           <Text style={[styles.sectionTitle, {color: colors.text}]}>
-            Pilih Trip (Multiple)
+            {t('filter.selectTrip')}
           </Text>
           <FlatList
             data={trips}
@@ -320,7 +322,7 @@ const FilterScreen = ({navigation, route}: any) => {
               setSelectedTrips([]);
             }}>
             <Text style={[styles.resetText, {color: colors.subText}]}>
-              Reset
+              {t('filter.reset')}
             </Text>
           </AnimatedButton>
           <AnimatedButton
@@ -329,7 +331,7 @@ const FilterScreen = ({navigation, route}: any) => {
               {flex: 2, backgroundColor: colors.primary},
             ]}
             onPress={handleApply}>
-            <Text style={styles.applyText}>Terapkan Filter</Text>
+            <Text style={styles.applyText}>{t('filter.apply')}</Text>
           </AnimatedButton>
         </View>
       </Animated.View>

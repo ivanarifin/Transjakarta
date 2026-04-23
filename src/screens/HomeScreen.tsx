@@ -28,9 +28,11 @@ if (
 import {fetchVehicles} from '../services/api';
 import {Vehicle} from '../types';
 import VehicleCard from '../components/VehicleCard';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
 
 const HomeScreen = ({navigation}: any) => {
+  const {t} = useTranslation();
   const {colors, toggleTheme, isDark} = useTheme();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +120,7 @@ const HomeScreen = ({navigation}: any) => {
 
         setHasMore(response.data.length === 10);
       } catch (err) {
-        setError('Gagal mengambil data kendaraan. Coba lagi nanti.');
+        setError(t('home.errorMessage'));
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -192,14 +194,14 @@ const HomeScreen = ({navigation}: any) => {
                 alignItems: 'center',
               }}>
               <Text style={{color: colors.primary, fontWeight: 'bold'}}>
-                Filter
+                {t('home.filter')}
               </Text>
             </TouchableOpacity>
           </Animated.View>
         );
       },
     });
-  }, [navigation, selectedRoutes, selectedTrips]);
+  }, [navigation, selectedRoutes, selectedTrips, isDark, toggleTheme, colors.primary, t]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -246,7 +248,7 @@ const HomeScreen = ({navigation}: any) => {
           style={[styles.retryButton, {backgroundColor: colors.retryButton}]}
           onPress={() => loadData(0)}>
           <Text style={[styles.retryText, {color: colors.retryText}]}>
-            Coba Lagi
+            {t('home.retry')}
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -287,7 +289,7 @@ const HomeScreen = ({navigation}: any) => {
           !loading ? (
             <View>
               <Text style={[styles.emptyText, {color: colors.subText}]}>
-                Tidak ada kendaraan ditemukan.
+                {t('home.empty')}
               </Text>
             </View>
           ) : null

@@ -1,0 +1,38 @@
+{
+  "navigation": {
+    "home": "Transjakarta Fleet",
+    "detail": "Vehicle Detail",
+    "filter": "Filter Vehicles"
+  },
+  "home": {
+    "filter": "Filter",
+    "errorMessage": "Failed to fetch vehicle data. Please try again later.",
+    "retry": "Try Again",
+    "empty": "No vehicles found."
+  },
+  "detail": {
+    "title": "Vehicle Detail",
+    "label": "Label:",
+    "status": "Status:",
+    "latitude": "Latitude:",
+    "longitude": "Longitude:",
+    "lastUpdate": "Last Update:",
+    "routeId": "Route ID:",
+    "tripId": "Trip ID:"
+  },
+  "filter": {
+    "selectRoute": "Select Route (Multiple)",
+    "selectTrip": "Select Trip (Multiple)",
+    "reset": "Reset",
+    "apply": "Apply Filter"
+  },
+  "vehicle": {
+    "vehicle": "Vehicle:",
+    "lat": "Lat:",
+    "long": "Long:",
+    "updated": "Updated:"
+  },
+  "common": {
+    "na": "N/A"
+  }
+}

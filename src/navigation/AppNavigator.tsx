@@ -2,6 +2,7 @@ import React from 'react';
 import {StatusBar} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -11,6 +12,7 @@ import FilterScreen from '../screens/FilterScreen';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
+  const {t} = useTranslation();
   const {colors, isDark} = useTheme();
 
   return (
@@ -29,18 +31,18 @@ const AppNavigator = () => {
         }}>
         <Stack.Screen
           name="Home"
-          component={HomeScreen} 
-          options={{ title: 'Armada Transjakarta' }}
+          component={HomeScreen}
+          options={{title: t('navigation.home')}}
         />
-        <Stack.Screen 
-          name="Detail" 
-          component={DetailScreen} 
-          options={{ title: 'Detail Kendaraan' }}
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={{title: t('navigation.detail')}}
         />
-        <Stack.Screen 
-          name="Filter" 
-          component={FilterScreen} 
-          options={{ title: 'Filter Kendaraan' }}
+        <Stack.Screen
+          name="Filter"
+          component={FilterScreen}
+          options={{title: t('navigation.filter')}}
         />
       </Stack.Navigator>
     </NavigationContainer>

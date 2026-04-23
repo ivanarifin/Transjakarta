@@ -10,9 +10,11 @@ import {
 import MapView, {Marker} from 'react-native-maps';
 import Config from 'react-native-config';
 import {Vehicle} from '../types';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
 
 const DetailScreen = ({route}: any) => {
+  const {t} = useTranslation();
   const {colors} = useTheme();
   const {vehicle}: {vehicle: Vehicle} = route.params;
   const {attributes} = vehicle;
@@ -74,31 +76,41 @@ const DetailScreen = ({route}: any) => {
             transform: [{translateY: detailsSlideAnim}],
           },
         ]}>
-        <Text style={[styles.title, {color: colors.text}]}>Detail Kendaraan</Text>
+        <Text style={[styles.title, {color: colors.text}]}>
+          {t('detail.title')}
+        </Text>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Label:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.label')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
             {attributes.label || vehicle.id}
           </Text>
         </View>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Status:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.status')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
             {attributes.current_status}
           </Text>
         </View>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Latitude:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.latitude')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
             {attributes.latitude}
           </Text>
         </View>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Longitude:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.longitude')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
             {attributes.longitude}
           </Text>
@@ -106,7 +118,7 @@ const DetailScreen = ({route}: any) => {
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
           <Text style={[styles.label, {color: colors.subText}]}>
-            Update Terakhir:
+            {t('detail.lastUpdate')}
           </Text>
           <Text style={[styles.value, {color: colors.text}]}>
             {new Date(attributes.updated_at).toLocaleString()}
@@ -114,16 +126,20 @@ const DetailScreen = ({route}: any) => {
         </View>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Route ID:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.routeId')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
-            {vehicle.relationships.route.data?.id || 'N/A'}
+            {vehicle.relationships.route.data?.id || t('common.na')}
           </Text>
         </View>
 
         <View style={[styles.row, {borderBottomColor: colors.border}]}>
-          <Text style={[styles.label, {color: colors.subText}]}>Trip ID:</Text>
+          <Text style={[styles.label, {color: colors.subText}]}>
+            {t('detail.tripId')}
+          </Text>
           <Text style={[styles.value, {color: colors.text}]}>
-            {vehicle.relationships.trip.data?.id || 'N/A'}
+            {vehicle.relationships.trip.data?.id || t('common.na')}
           </Text>
         </View>
       </Animated.View>

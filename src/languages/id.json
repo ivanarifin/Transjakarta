@@ -1,0 +1,38 @@
+{
+  "navigation": {
+    "home": "Armada Transjakarta",
+    "detail": "Detail Kendaraan",
+    "filter": "Filter Kendaraan"
+  },
+  "home": {
+    "filter": "Filter",
+    "errorMessage": "Gagal mengambil data kendaraan. Coba lagi nanti.",
+    "retry": "Coba Lagi",
+    "empty": "Tidak ada kendaraan ditemukan."
+  },
+  "detail": {
+    "title": "Detail Kendaraan",
+    "label": "Label:",
+    "status": "Status:",
+    "latitude": "Latitude:",
+    "longitude": "Longitude:",
+    "lastUpdate": "Update Terakhir:",
+    "routeId": "Route ID:",
+    "tripId": "Trip ID:"
+  },
+  "filter": {
+    "selectRoute": "Pilih Rute (Multiple)",
+    "selectTrip": "Pilih Trip (Multiple)",
+    "reset": "Reset",
+    "apply": "Terapkan Filter"
+  },
+  "vehicle": {
+    "vehicle": "Kendaraan:",
+    "lat": "Lat:",
+    "long": "Long:",
+    "updated": "Diperbarui:"
+  },
+  "common": {
+    "na": "T/A"
+  }
+}

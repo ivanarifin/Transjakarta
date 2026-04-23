@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Animated} from 'react-native';
 import {Vehicle} from '../types';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from '../theme/ThemeContext';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => {
+  const {t} = useTranslation();
   const {colors} = useTheme();
   const {attributes} = vehicle;
 
@@ -70,7 +72,7 @@ const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => 
         onPress={() => onPress(vehicle)}>
         <View style={styles.header}>
           <Text style={[styles.label, {color: colors.text}]}>
-            Vehicle: {attributes.label || vehicle.id}
+            {t('vehicle.vehicle')} {attributes.label || vehicle.id}
           </Text>
           <View
             style={[
@@ -83,11 +85,13 @@ const VehicleCard: React.FC<Props> = ({vehicle, onPress, isVisible = false}) => 
 
         <View style={[styles.body, {borderTopColor: colors.border}]}>
           <Text style={[styles.info, {color: colors.subText}]}>
-            Lat: {attributes.latitude?.toFixed(4) || 'N/A'} | Long:{' '}
-            {attributes.longitude?.toFixed(4) || 'N/A'}
+            {t('vehicle.lat')} {attributes.latitude?.toFixed(4) || t('common.na')}{' '}
+            | {t('vehicle.long')}{' '}
+            {attributes.longitude?.toFixed(4) || t('common.na')}
           </Text>
           <Text style={[styles.time, {color: colors.mutedText}]}>
-            Updated: {new Date(attributes.updated_at).toLocaleString()}
+            {t('vehicle.updated')}{' '}
+            {new Date(attributes.updated_at).toLocaleString()}
           </Text>
         </View>
       </TouchableOpacity>
