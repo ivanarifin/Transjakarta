@@ -19,7 +19,7 @@ export const lightColors = {
   shimmer: '#E1E1E1',
   cardShadow: '#000000',
   splashBg: '#0D1B2A',
-  splashAccent: '#E63946',
+  splashAccent: '#007AFF',
   splashText: '#FFFFFF',
 };
 
@@ -44,7 +44,7 @@ export const darkColors = {
   shimmer: '#2C2C2E',
   cardShadow: '#000000',
   splashBg: '#0D1B2A',
-  splashAccent: '#E63946',
+  splashAccent: '#007AFF',
   splashText: '#FFFFFF',
 };
 

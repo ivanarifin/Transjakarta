@@ -52,7 +52,7 @@ const SplashScreen = ({navigation}: any) => {
         duration: 600,
         useNativeDriver: true,
       }),
-      // 3. Red accent line scales from center
+      // 3. Blue accent line scales from center
       Animated.timing(accentWidth, {
         toValue: 1,
         duration: 500,
@@ -107,7 +107,7 @@ const SplashScreen = ({navigation}: any) => {
             },
           ]}>
           <View style={[styles.logoBox, {borderColor: colors.splashAccent}]}>
-            <Text style={[styles.logoText, {color: colors.splashText}]}>T</Text>
+            <Text style={[styles.logoText, {color: colors.splashText}]}>Tj</Text>
           </View>
         </Animated.View>
 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logoBox: {
-    width: 80,
+    width: 100,
     height: 80,
     borderWidth: 4,
     borderRadius: 20,
